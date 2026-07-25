@@ -81,11 +81,12 @@ source scripts/dev.sh   # creates .venv, installs the project + dev deps
 ## Usage
 
 ```bash
-# Import your GEDCOM export from Family Tree for Windows
-genealogy import /path/to/your-export.ged --db data/tree.db
-
 # Browse and edit the tree at http://127.0.0.1:8000
 genealogy serve --db data/tree.db
+.venv/bin/genealogy serve --db data/tree.db
+
+# Import your GEDCOM export from Family Tree for Windows
+genealogy import /path/to/your-export.ged --db data/tree.db
 
 # Export back to GEDCOM at any time
 genealogy export data/tree.db /path/to/output.ged

@@ -1,33 +1,10 @@
 import { api } from "../api.js";
-import { esc, openFormModal, confirmModal, pickPerson, showError } from "../ui.js";
-
-const SEX_OPTIONS = [
-  { value: "", label: "(unknown)" },
-  { value: "M", label: "Male" },
-  { value: "F", label: "Female" },
-  { value: "U", label: "Unknown" },
-];
+import { esc, openFormModal, confirmModal, pickPerson, showError, SEX_OPTIONS } from "../ui.js";
 
 const EVENT_TYPES = [
   "BIRT", "CHR", "DEAT", "BURI", "CREM", "BAPM", "CONF", "OCCU", "RESI",
   "EDUC", "EMIG", "IMMI", "NATU", "CENS", "PROB", "WILL", "GRAD", "RETI", "EVEN",
 ];
-
-export function showAddPersonModal() {
-  openFormModal({
-    title: "Add person",
-    fields: [
-      { name: "given_names", label: "Given names" },
-      { name: "surname", label: "Surname" },
-      { name: "sex", label: "Sex", type: "select", options: SEX_OPTIONS },
-    ],
-    submitLabel: "Create",
-    onSubmit: async (data) => {
-      const created = await api.createIndividual(data);
-      location.hash = `#/person/${created.id}`;
-    },
-  });
-}
 
 export async function renderPerson(app, id) {
   const container = document.createElement("div");

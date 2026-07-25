@@ -1,5 +1,5 @@
 import { renderSearch } from "./views/search.js";
-import { renderPerson, showAddPersonModal } from "./views/person.js";
+import { renderPerson } from "./views/person.js";
 import { renderFamily } from "./views/family.js";
 import { renderFamilies } from "./views/families.js";
 import { renderTree } from "./views/tree.js";
@@ -44,5 +44,3 @@ async function route() {
 
 window.addEventListener("hashchange", route);
 window.addEventListener("DOMContentLoaded", route);
-
-document.getElementById("add-person-btn").addEventListener("click", showAddPersonModal);
