@@ -1,4 +1,6 @@
 import { api } from "../api.js";
+import { esc, pickPerson, showError } from "../ui.js";
+import { renderOutlineHtml, renderDirectLineHtml } from "./reportViews.js";
 
 function buildHierarchy(rootId, nodesById, edges, mode, seen) {
   if (seen.has(rootId)) return null; // guard against pedigree collapse (e.g. cousin marriages)
@@ -25,41 +27,170 @@ function buildHierarchy(rootId, nodesById, edges, mode, seen) {
   };
 }
 
-export async function renderTree(app, rootId, direction = "ancestors", generations = 5) {
+function hashFor(rootId, { direction, generations, view, targetId }) {
+  const params = new URLSearchParams({ direction, generations: String(generations), view });
+  if (view === "direct" && targetId) params.set("target", String(targetId));
+  return `#/tree/${rootId}?${params}`;
+}
+
+export async function renderTree(app, rootId, opts = {}) {
+  const direction = opts.direction === "descendants" ? "descendants" : "ancestors";
+  const generations = opts.generations || 5;
+  const view = ["outline", "direct"].includes(opts.view) ? opts.view : "chart";
+  const targetId = opts.targetId || null;
+
   const container = document.createElement("div");
   container.innerHTML = `
     <div class="card">
-      <div class="tree-controls">
-        <strong>Pedigree</strong>
-        <button id="dir-ancestors" class="${direction === "ancestors" ? "primary" : ""}">Ancestors</button>
-        <button id="dir-descendants" class="${direction === "descendants" ? "primary" : ""}">Descendants</button>
-        <label class="muted">Generations
-          <select id="gen-select">
-            ${[2, 3, 4, 5, 6, 7, 8].map((g) => `<option value="${g}" ${g === generations ? "selected" : ""}>${g}</option>`).join("")}
-          </select>
-        </label>
+      <div class="tree-controls no-print">
+        <div class="view-tabs">
+          <button id="mode-chart" class="${view === "chart" ? "primary" : ""}">Chart</button>
+          <button id="mode-outline" class="${view === "outline" ? "primary" : ""}">Outline Descendants</button>
+          <button id="mode-direct" class="${view === "direct" ? "primary" : ""}">Direct Line</button>
+        </div>
         <a id="view-detail-link" href="#/person/${rootId}">View person details &rarr;</a>
       </div>
-      <svg id="tree-svg"></svg>
+      <div id="mode-body"></div>
     </div>
   `;
   app.appendChild(container);
 
-  container.querySelector("#dir-ancestors").addEventListener("click", () => {
-    location.hash = `#/tree/${rootId}?direction=ancestors&generations=${generations}`;
+  container.querySelector("#mode-chart").addEventListener("click", () => {
+    location.hash = hashFor(rootId, { direction, generations, view: "chart" });
   });
-  container.querySelector("#dir-descendants").addEventListener("click", () => {
-    location.hash = `#/tree/${rootId}?direction=descendants&generations=${generations}`;
+  container.querySelector("#mode-outline").addEventListener("click", () => {
+    location.hash = hashFor(rootId, { direction, generations, view: "outline" });
   });
-  container.querySelector("#gen-select").addEventListener("change", (e) => {
-    location.hash = `#/tree/${rootId}?direction=${direction}&generations=${e.target.value}`;
+  container.querySelector("#mode-direct").addEventListener("click", () => {
+    location.hash = hashFor(rootId, { direction, generations, view: "direct", targetId });
+  });
+
+  const body = container.querySelector("#mode-body");
+
+  if (view === "chart") {
+    await renderChart(body, rootId, direction, generations);
+  } else if (view === "outline") {
+    await renderOutline(body, rootId);
+  } else {
+    await renderDirectLine(body, rootId, targetId);
+  }
+}
+
+async function renderChart(body, rootId, direction, generations) {
+  body.innerHTML = `
+    <div class="tree-controls no-print">
+      <strong>Pedigree</strong>
+      <button id="dir-ancestors" class="${direction === "ancestors" ? "primary" : ""}">Ancestors</button>
+      <button id="dir-descendants" class="${direction === "descendants" ? "primary" : ""}">Descendants</button>
+      <label class="muted">Generations
+        <select id="gen-select">
+          ${[2, 3, 4, 5, 6, 7, 8].map((g) => `<option value="${g}" ${g === generations ? "selected" : ""}>${g}</option>`).join("")}
+        </select>
+      </label>
+    </div>
+    <svg id="tree-svg"></svg>
+  `;
+
+  body.querySelector("#dir-ancestors").addEventListener("click", () => {
+    location.hash = hashFor(rootId, { direction: "ancestors", generations, view: "chart" });
+  });
+  body.querySelector("#dir-descendants").addEventListener("click", () => {
+    location.hash = hashFor(rootId, { direction: "descendants", generations, view: "chart" });
+  });
+  body.querySelector("#gen-select").addEventListener("change", (e) => {
+    location.hash = hashFor(rootId, { direction, generations: Number(e.target.value), view: "chart" });
   });
 
   const data = await api.getTree(rootId, direction, generations);
   const nodesById = Object.fromEntries(data.nodes.map((n) => [n.id, n]));
   const hierarchyData = buildHierarchy(rootId, nodesById, data.edges, direction, new Set());
 
-  drawTree(container.querySelector("#tree-svg"), hierarchyData, direction);
+  drawTree(body.querySelector("#tree-svg"), hierarchyData, direction);
+}
+
+function reportHeader({ title, subtitle, onPrint }) {
+  const header = document.createElement("div");
+  header.innerHTML = `
+    <div class="report-toolbar no-print">
+      <button id="report-print-btn">Print</button>
+    </div>
+    <h2 class="report-title">${esc(title)}</h2>
+    ${subtitle ? `<p class="muted report-subtitle">${esc(subtitle)}</p>` : ""}
+  `;
+  header.querySelector("#report-print-btn").addEventListener("click", onPrint);
+  return header;
+}
+
+async function renderOutline(body, rootId) {
+  body.innerHTML = "";
+  let data;
+  try {
+    data = await api.getDescendantsOutline(rootId);
+  } catch (err) {
+    showError(body, err);
+    return;
+  }
+
+  const asOf = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long" });
+  body.appendChild(
+    reportHeader({
+      title: `Descendants of ${data.root.name}`,
+      subtitle: `as of ${asOf}`,
+      onPrint: () => window.print(),
+    })
+  );
+
+  const report = document.createElement("div");
+  report.className = "outline-report";
+  report.innerHTML = renderOutlineHtml(data.root);
+  body.appendChild(report);
+}
+
+async function renderDirectLine(body, rootId, targetId) {
+  body.innerHTML = "";
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "report-toolbar no-print";
+  toolbar.innerHTML = `<button id="pick-target-btn">${targetId ? "Change target person…" : "Choose target descendant…"}</button>`;
+  body.appendChild(toolbar);
+
+  toolbar.querySelector("#pick-target-btn").addEventListener("click", async () => {
+    const chosen = await pickPerson({ excludeId: rootId, title: "Choose the descendant to trace the line to" });
+    if (chosen === null) return;
+    location.hash = hashFor(rootId, { direction: "descendants", generations: 5, view: "direct", targetId: chosen });
+  });
+
+  if (!targetId) {
+    const hint = document.createElement("p");
+    hint.className = "muted";
+    hint.textContent = "Choose a descendant above to trace the direct line of descent down to them.";
+    body.appendChild(hint);
+    return;
+  }
+
+  let data;
+  try {
+    data = await api.getDirectLine(rootId, targetId);
+  } catch (err) {
+    showError(body, err);
+    return;
+  }
+
+  const first = data.steps[0];
+  const last = data.steps[data.steps.length - 1];
+  const asOf = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long" });
+  body.appendChild(
+    reportHeader({
+      title: `Direct Descendants of ${first.name} to ${last.name}`,
+      subtitle: `as of ${asOf}`,
+      onPrint: () => window.print(),
+    })
+  );
+
+  const report = document.createElement("div");
+  report.className = "outline-report";
+  report.innerHTML = renderDirectLineHtml(data.steps);
+  body.appendChild(report);
 }
 
 function drawTree(svgEl, hierarchyData, direction) {

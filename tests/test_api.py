@@ -251,3 +251,71 @@ def test_tree_invalid_direction(client):
     john_id = _individual_id(client, "@I1@")
     resp = client.get(f"/api/tree/{john_id}", params={"direction": "sideways"})
     assert resp.status_code == 400
+
+
+def test_descendants_outline(client):
+    john_id = _individual_id(client, "@I1@")
+    resp = client.get(f"/api/reports/descendants/{john_id}")
+    assert resp.status_code == 200
+    root = resp.json()["root"]
+
+    assert root["name"] == "John Smith"
+    assert root["generation"] == 1
+    assert len(root["unions"]) == 1
+
+    union = root["unions"][0]
+    assert union["spouse"]["name"] == "Mary Jones"
+    assert union["marriage_date_raw"] == "3 SEP 1876"
+    assert union["ordinal"] == 1
+    assert union["total_unions"] == 1
+
+    children = union["children"]
+    assert len(children) == 1
+    assert children[0]["name"] == "Alice Smith"
+    assert children[0]["generation"] == 2
+    assert children[0]["unions"] == []
+
+
+def test_descendants_outline_404(client):
+    resp = client.get("/api/reports/descendants/999999")
+    assert resp.status_code == 404
+
+
+def test_direct_line(client):
+    john_id = _individual_id(client, "@I1@")
+    alice_id = _individual_id(client, "@I3@")
+    resp = client.get("/api/reports/direct-line", params={"from_id": john_id, "to_id": alice_id})
+    assert resp.status_code == 200
+    steps = resp.json()["steps"]
+
+    assert len(steps) == 2
+    assert steps[0]["name"] == "John Smith"
+    assert steps[0]["generation"] == 1
+    assert steps[0]["spouse"]["name"] == "Mary Jones"
+    assert steps[0]["marriage_date_raw"] == "3 SEP 1876"
+
+    assert steps[1]["name"] == "Alice Smith"
+    assert steps[1]["generation"] == 2
+    assert steps[1]["spouse"] is None
+
+
+def test_direct_line_same_person(client):
+    john_id = _individual_id(client, "@I1@")
+    resp = client.get("/api/reports/direct-line", params={"from_id": john_id, "to_id": john_id})
+    assert resp.status_code == 200
+    steps = resp.json()["steps"]
+    assert len(steps) == 1
+    assert steps[0]["name"] == "John Smith"
+
+
+def test_direct_line_unrelated_404(client):
+    john_id = _individual_id(client, "@I1@")
+    francois_id = _individual_id(client, "@I5@")
+    resp = client.get("/api/reports/direct-line", params={"from_id": john_id, "to_id": francois_id})
+    assert resp.status_code == 404
+
+
+def test_direct_line_missing_person_404(client):
+    john_id = _individual_id(client, "@I1@")
+    resp = client.get("/api/reports/direct-line", params={"from_id": john_id, "to_id": 999999})
+    assert resp.status_code == 404

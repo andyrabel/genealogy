@@ -31,7 +31,9 @@ async function route() {
     } else if (parts[0] === "tree" && parts[1]) {
       const direction = query.get("direction") === "descendants" ? "descendants" : "ancestors";
       const generations = Math.max(2, Math.min(8, Number(query.get("generations")) || 5));
-      await renderTree(app, Number(parts[1]), direction, generations);
+      const view = query.get("view");
+      const targetId = query.get("target") ? Number(query.get("target")) : null;
+      await renderTree(app, Number(parts[1]), { direction, generations, view, targetId });
     } else if (parts[0] === "sources") {
       await renderSources(app);
     } else {

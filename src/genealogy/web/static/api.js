@@ -55,4 +55,8 @@ export const api = {
 
   getTree: (id, direction, generations) =>
     request("GET", `/tree/${id}?direction=${direction}&generations=${generations}`),
+
+  getDescendantsOutline: (id) => request("GET", `/reports/descendants/${id}`),
+  getDirectLine: (fromId, toId) =>
+    request("GET", `/reports/direct-line?from_id=${fromId}&to_id=${toId}`),
 };

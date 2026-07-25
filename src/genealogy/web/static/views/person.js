@@ -50,6 +50,8 @@ function renderShell(person) {
         <div class="actions">
           <a href="#/tree/${person.id}?direction=ancestors"><button>Ancestors</button></a>
           <a href="#/tree/${person.id}?direction=descendants"><button>Descendants</button></a>
+          <a href="#/tree/${person.id}?direction=descendants&view=outline"><button>Outline</button></a>
+          <a href="#/tree/${person.id}?direction=descendants&view=direct"><button>Direct Line</button></a>
           <button id="edit-person-btn">Edit</button>
           <button id="delete-person-btn" class="danger">Delete</button>
         </div>
