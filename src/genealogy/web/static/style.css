@@ -67,6 +67,7 @@ button.link {
 }
 
 main#app { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+main#app:has(.family-view) { padding: 0.85rem 1.5rem; }
 
 .card {
   background: var(--panel);
@@ -140,3 +141,80 @@ tr.clickable:hover { background: #f1efe9; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
 
 .error-banner { background: #f8dcd6; color: var(--danger); padding: 0.6rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
+
+.family-view .card { padding: 0.5rem 1.25rem; margin-bottom: 0.5rem; }
+.family-header h2 { margin: 0 0 0.4rem; }
+.family-view table td, .family-view table th { padding: 0.25rem 0.4rem; }
+.family-view table td:first-child { white-space: nowrap; }
+
+.family-parents-row, .spouse-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.parents-col .parents-header {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.parents-col .parents-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.spouse-panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+  background: var(--bg);
+}
+.spouse-panel h3 { margin-top: 0; margin-bottom: 0.2rem; }
+.spouse-panel .spouse-name {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.spouse-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.spouse-panel label input { font-size: 1rem; color: var(--text); }
+.spouse-panel .actions { margin-top: 0.5rem; }
+
+.vital-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.vital-row label { margin-bottom: 0; min-width: 0; }
+.vital-row label:first-child { flex: 0 0 40%; }
+.vital-row label:last-child { flex: 1; }
+
+.marriage-row {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  margin-top: 0.85rem;
+  flex-wrap: wrap;
+}
+.marriage-row label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  flex: 1;
+  min-width: 220px;
+}
+.marriage-row label input { flex: 1; font-size: 1rem; color: var(--text); }
+
+@media (max-width: 700px) {
+  .family-parents-row, .spouse-grid { grid-template-columns: 1fr; }
+}

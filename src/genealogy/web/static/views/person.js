@@ -107,7 +107,10 @@ function renderShell(person) {
     </div>
 
     <div class="card">
-      <h3>Parents</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>Parents</h3>
+        ${person.family_as_child ? `<a href="#/family/${person.family_as_child.family_id}"><button class="primary">Family view</button></a>` : ""}
+      </div>
       ${
         person.family_as_child
           ? `
@@ -142,7 +145,10 @@ function renderShell(person) {
                   ${f.marriage_date_raw || f.marriage_place ? `Married ${esc(f.marriage_date_raw)}${f.marriage_place ? ` in ${esc(f.marriage_place)}` : ""}` : "Marriage date/place unknown"}
                 </div>
               </div>
-              <button class="link edit-marriage" data-family="${f.family_id}">edit marriage</button>
+              <div class="actions">
+                <a href="#/family/${f.family_id}"><button class="primary">Family view</button></a>
+                <button class="link edit-marriage" data-family="${f.family_id}">edit marriage</button>
+              </div>
             </div>
             <table style="margin-top:0.5rem;">
               <thead><tr><th>Child</th><th></th></tr></thead>

@@ -1,5 +1,7 @@
 import { renderSearch } from "./views/search.js";
 import { renderPerson, showAddPersonModal } from "./views/person.js";
+import { renderFamily } from "./views/family.js";
+import { renderFamilies } from "./views/families.js";
 import { renderTree } from "./views/tree.js";
 import { renderSources } from "./views/sources.js";
 import { showError } from "./ui.js";
@@ -22,6 +24,10 @@ async function route() {
       await renderSearch(app);
     } else if (parts[0] === "person" && parts[1]) {
       await renderPerson(app, Number(parts[1]));
+    } else if (parts[0] === "families") {
+      await renderFamilies(app);
+    } else if (parts[0] === "family" && parts[1]) {
+      await renderFamily(app, Number(parts[1]));
     } else if (parts[0] === "tree" && parts[1]) {
       const direction = query.get("direction") === "descendants" ? "descendants" : "ancestors";
       const generations = Math.max(2, Math.min(8, Number(query.get("generations")) || 5));

@@ -26,8 +26,10 @@ export const api = {
   getIndividual: (id) => request("GET", `/individuals/${id}`),
   createIndividual: (body) => request("POST", "/individuals", body),
   updateIndividual: (id, body) => request("PUT", `/individuals/${id}`, body),
+  updateVitals: (id, body) => request("PUT", `/individuals/${id}/vitals`, body),
   deleteIndividual: (id) => request("DELETE", `/individuals/${id}`),
 
+  listFamilies: (params = {}) => request("GET", `/families?${new URLSearchParams(params)}`),
   getFamily: (id) => request("GET", `/families/${id}`),
   createFamily: (body) => request("POST", "/families", body),
   updateMarriage: (id, body) => request("PUT", `/families/${id}`, body),

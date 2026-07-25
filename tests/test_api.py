@@ -74,6 +74,62 @@ def test_create_update_delete_individual(client):
     assert client.get(f"/api/individuals/{new_id}").status_code == 404
 
 
+def test_update_vitals_creates_and_updates_events(client):
+    john_id = _individual_id(client, "@I1@")
+    original = client.get(f"/api/individuals/{john_id}").json()
+    assert original["birth_date_raw"]
+
+    resp = client.put(
+        f"/api/individuals/{john_id}/vitals",
+        json={
+            "birth_date_raw": "1 JAN 1840",
+            "birth_place": "York, England",
+            "death_date_raw": "1900",
+            "death_place": "Leeds, England",
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["birth_date_raw"] == "1 JAN 1840"
+    assert body["birth_place"] == "York, England"
+    assert body["death_date_raw"] == "1900"
+    assert body["death_place"] == "Leeds, England"
+
+    detail = client.get(f"/api/individuals/{john_id}").json()
+    birth_events = [e for e in detail["events"] if e["event_type"] == "BIRT"]
+    assert len(birth_events) == 1
+    assert birth_events[0]["date_raw"] == "1 JAN 1840"
+
+    new_person = client.post("/api/individuals", json={"given_names": "New", "surname": "Person"}).json()
+    resp = client.put(
+        f"/api/individuals/{new_person['id']}/vitals",
+        json={"birth_date_raw": "1950", "birth_place": None, "death_date_raw": None, "death_place": None},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["birth_date_raw"] == "1950"
+    assert resp.json()["death_date_raw"] is None
+
+
+def test_list_families(client):
+    resp = client.get("/api/families")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] >= 1
+    assert any(f["husband"] and f["husband"]["surname"] == "Smith" for f in body["results"])
+
+    resp = client.get("/api/families", params={"surname": "Smith"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] >= 1
+    assert all(
+        (f["husband"] and f["husband"]["surname"] == "Smith") or (f["wife"] and f["wife"]["surname"] == "Smith")
+        for f in body["results"]
+    )
+
+    resp = client.get("/api/families", params={"surname": "NoSuchSurname"})
+    assert resp.json()["total"] == 0
+
+
 def test_family_detail_and_marriage_update(client):
     john_id = _individual_id(client, "@I1@")
     family_id = client.get(f"/api/individuals/{john_id}").json()["families_as_spouse"][0]["family_id"]
@@ -85,6 +141,23 @@ def test_family_detail_and_marriage_update(client):
     resp = client.put(f"/api/families/{family_id}", json={"date_raw": "4 SEP 1876", "place": "Leeds"})
     assert resp.status_code == 200
     assert resp.json()["marriage_date_raw"] == "4 SEP 1876"
+
+
+def test_family_children_include_own_family_id(client):
+    alice_id = _individual_id(client, "@I3@")
+    john_id = _individual_id(client, "@I1@")
+    family_id = client.get(f"/api/individuals/{john_id}").json()["families_as_spouse"][0]["family_id"]
+
+    detail = client.get(f"/api/families/{family_id}").json()
+    alice = next(c for c in detail["children"] if c["id"] == alice_id)
+    assert alice["own_family_id"] is None
+
+    spouse = client.post("/api/individuals", json={"given_names": "Bob", "surname": "Someone"}).json()
+    alice_family = client.post("/api/families", json={"husband_id": spouse["id"], "wife_id": alice_id}).json()
+
+    detail = client.get(f"/api/families/{family_id}").json()
+    alice = next(c for c in detail["children"] if c["id"] == alice_id)
+    assert alice["own_family_id"] == alice_family["id"]
 
 
 def test_add_and_remove_child(client):

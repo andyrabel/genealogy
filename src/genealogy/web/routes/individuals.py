@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from genealogy.db import edits
 from genealogy.db.edits import NotFoundError
 from genealogy.web.deps import get_conn
-from genealogy.web.schemas import IndividualIn
+from genealogy.web.schemas import IndividualIn, VitalsUpdate
 from genealogy.web.serialize import individual_summary as _summary
 
 router = APIRouter(prefix="/api/individuals", tags=["individuals"])
@@ -170,6 +170,29 @@ def update_individual(
 ) -> dict:
     _individual_or_404(conn, individual_id)
     edits.update_individual(conn, individual_id, **body.model_dump())
+    return _summary(_individual_or_404(conn, individual_id))
+
+
+def _set_vital(
+    conn: sqlite3.Connection, individual_id: int, event_type: str, date_raw: str | None, place: str | None
+) -> None:
+    event = conn.execute(
+        "SELECT id FROM events WHERE owner_type = 'INDI' AND owner_id = ? AND event_type = ?",
+        (individual_id, event_type),
+    ).fetchone()
+    if event:
+        edits.update_event(conn, event["id"], date_raw=date_raw, place=place)
+    elif date_raw or place:
+        edits.add_event(conn, "INDI", individual_id, event_type, date_raw=date_raw, place=place)
+
+
+@router.put("/{individual_id}/vitals")
+def update_vitals(
+    individual_id: int, body: VitalsUpdate, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict:
+    _individual_or_404(conn, individual_id)
+    _set_vital(conn, individual_id, "BIRT", body.birth_date_raw, body.birth_place)
+    _set_vital(conn, individual_id, "DEAT", body.death_date_raw, body.death_place)
     return _summary(_individual_or_404(conn, individual_id))
 
 

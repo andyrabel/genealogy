@@ -30,14 +30,18 @@ def _detail(conn: sqlite3.Connection, fam: sqlite3.Row) -> dict:
         if fam["wife_id"]
         else None
     )
-    children = [
-        _summary(c)
-        for c in conn.execute(
-            "SELECT i.* FROM family_children fc JOIN individuals i ON i.id = fc.child_id "
-            "WHERE fc.family_id = ? ORDER BY fc.sort_order",
-            (fam["id"],),
-        )
-    ]
+    children = []
+    for c in conn.execute(
+        "SELECT i.* FROM family_children fc JOIN individuals i ON i.id = fc.child_id "
+        "WHERE fc.family_id = ? ORDER BY fc.sort_order",
+        (fam["id"],),
+    ):
+        child = _summary(c)
+        own_family = conn.execute(
+            "SELECT id FROM families WHERE husband_id = ? OR wife_id = ? LIMIT 1", (c["id"], c["id"])
+        ).fetchone()
+        child["own_family_id"] = own_family["id"] if own_family else None
+        children.append(child)
     return {
         "id": fam["id"],
         "xref_id": fam["xref_id"],
@@ -46,6 +50,40 @@ def _detail(conn: sqlite3.Connection, fam: sqlite3.Row) -> dict:
         "marriage_date_raw": fam["marriage_date_raw"],
         "marriage_place": fam["marriage_place"],
         "children": children,
+    }
+
+
+@router.get("")
+def list_families(
+    surname: str | None = None,
+    page: int = 1,
+    page_size: int = 50,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict:
+    clauses = []
+    params: list = []
+    if surname:
+        clauses.append(
+            "(husband_id IN (SELECT id FROM individuals WHERE surname LIKE ?) "
+            "OR wife_id IN (SELECT id FROM individuals WHERE surname LIKE ?))"
+        )
+        params.extend([f"%{surname}%", f"%{surname}%"])
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    total = conn.execute(f"SELECT COUNT(*) FROM families {where}", params).fetchone()[0]
+
+    page = max(page, 1)
+    page_size = max(1, min(page_size, 200))
+    offset = (page - 1) * page_size
+    rows = conn.execute(
+        f"SELECT * FROM families {where} ORDER BY id LIMIT ? OFFSET ?",
+        [*params, page_size, offset],
+    ).fetchall()
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "results": [_detail(conn, r) for r in rows],
     }
 
 

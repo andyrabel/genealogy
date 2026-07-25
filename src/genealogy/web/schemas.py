@@ -28,6 +28,13 @@ class EventUpdate(BaseModel):
     note: str | None = None
 
 
+class VitalsUpdate(BaseModel):
+    birth_date_raw: str | None = None
+    birth_place: str | None = None
+    death_date_raw: str | None = None
+    death_place: str | None = None
+
+
 class FamilyCreate(BaseModel):
     husband_id: int | None = None
     wife_id: int | None = None
