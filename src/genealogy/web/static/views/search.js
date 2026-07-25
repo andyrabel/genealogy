@@ -2,7 +2,7 @@ import { api } from "../api.js";
 import { esc } from "../ui.js";
 
 export async function renderSearch(app) {
-  const state = { q: "", surname: "", birth_from: "", birth_to: "", page: 1, page_size: 25 };
+  const state = { q: "", surname: "", birth_from: "", birth_to: "", sort: "name", page: 1, page_size: 25 };
 
   const container = document.createElement("div");
   container.innerHTML = `
@@ -16,7 +16,7 @@ export async function renderSearch(app) {
         <button id="search-btn" class="primary">Search</button>
       </div>
       <table>
-        <thead><tr><th>Name</th><th>Sex</th><th>Birth</th><th>Death</th></tr></thead>
+        <thead><tr><th>Name</th><th>Sex</th><th class="sortable" id="sort-birth">Birth</th><th>Death</th></tr></thead>
         <tbody id="results"></tbody>
       </table>
       <div class="pagination">
@@ -32,9 +32,16 @@ export async function renderSearch(app) {
   const pageInfo = container.querySelector("#page-info");
   const prevBtn = container.querySelector("#prev-page");
   const nextBtn = container.querySelector("#next-page");
+  const birthHeader = container.querySelector("#sort-birth");
+
+  function updateSortHeader() {
+    birthHeader.textContent = "Birth";
+    if (state.sort === "birth_asc") birthHeader.textContent = "Birth ▲";
+    else if (state.sort === "birth_desc") birthHeader.textContent = "Birth ▼";
+  }
 
   async function load() {
-    const params = { page: state.page, page_size: state.page_size };
+    const params = { page: state.page, page_size: state.page_size, sort: state.sort };
     if (state.q) params.q = state.q;
     if (state.surname) params.surname = state.surname;
     if (state.birth_from) params.birth_from = state.birth_from;
@@ -90,6 +97,13 @@ export async function renderSearch(app) {
     state.page++;
     load();
   });
+  birthHeader.addEventListener("click", () => {
+    state.sort = state.sort === "birth_asc" ? "birth_desc" : "birth_asc";
+    state.page = 1;
+    updateSortHeader();
+    load();
+  });
 
+  updateSortHeader();
   await load();
 }

@@ -1,6 +1,6 @@
 import { api } from "../api.js";
 import { esc, pickPerson, showError } from "../ui.js";
-import { renderOutlineHtml, renderDirectLineHtml } from "./reportViews.js";
+import { renderOutlineHtml, renderDirectLineHtml, DATE_MODES, DEFAULT_DATE_MODE } from "./reportViews.js";
 
 function buildHierarchy(rootId, nodesById, edges, mode, seen) {
   if (seen.has(rootId)) return null; // guard against pedigree collapse (e.g. cousin marriages)
@@ -108,16 +108,22 @@ async function renderChart(body, rootId, direction, generations) {
   drawTree(body.querySelector("#tree-svg"), hierarchyData, direction);
 }
 
-function reportHeader({ title, subtitle, onPrint }) {
+function reportHeader({ title, subtitle, onPrint, dateMode, onDateModeChange }) {
   const header = document.createElement("div");
   header.innerHTML = `
     <div class="report-toolbar no-print">
+      <label class="muted">Dates
+        <select id="report-date-mode">
+          ${DATE_MODES.map((m) => `<option value="${m.value}" ${m.value === dateMode ? "selected" : ""}>${esc(m.label)}</option>`).join("")}
+        </select>
+      </label>
       <button id="report-print-btn">Print</button>
     </div>
     <h2 class="report-title">${esc(title)}</h2>
     ${subtitle ? `<p class="muted report-subtitle">${esc(subtitle)}</p>` : ""}
   `;
   header.querySelector("#report-print-btn").addEventListener("click", onPrint);
+  header.querySelector("#report-date-mode").addEventListener("change", (e) => onDateModeChange(e.target.value));
   return header;
 }
 
@@ -132,17 +138,27 @@ async function renderOutline(body, rootId) {
   }
 
   const asOf = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long" });
+
+  const report = document.createElement("div");
+  report.className = "outline-report";
+  let dateMode = DEFAULT_DATE_MODE;
+  const renderReport = () => {
+    report.innerHTML = renderOutlineHtml(data.root, dateMode);
+  };
+  renderReport();
+
   body.appendChild(
     reportHeader({
       title: `Descendants of ${data.root.name}`,
       subtitle: `as of ${asOf}`,
       onPrint: () => window.print(),
+      dateMode,
+      onDateModeChange: (value) => {
+        dateMode = value;
+        renderReport();
+      },
     })
   );
-
-  const report = document.createElement("div");
-  report.className = "outline-report";
-  report.innerHTML = renderOutlineHtml(data.root);
   body.appendChild(report);
 }
 
@@ -179,17 +195,27 @@ async function renderDirectLine(body, rootId, targetId) {
   const first = data.steps[0];
   const last = data.steps[data.steps.length - 1];
   const asOf = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long" });
+
+  const report = document.createElement("div");
+  report.className = "outline-report";
+  let dateMode = DEFAULT_DATE_MODE;
+  const renderReport = () => {
+    report.innerHTML = renderDirectLineHtml(data.steps, dateMode);
+  };
+  renderReport();
+
   body.appendChild(
     reportHeader({
       title: `Direct Descendants of ${first.name} to ${last.name}`,
       subtitle: `as of ${asOf}`,
       onPrint: () => window.print(),
+      dateMode,
+      onDateModeChange: (value) => {
+        dateMode = value;
+        renderReport();
+      },
     })
   );
-
-  const report = document.createElement("div");
-  report.className = "outline-report";
-  report.innerHTML = renderDirectLineHtml(data.steps);
   body.appendChild(report);
 }
 

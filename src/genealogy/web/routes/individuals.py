@@ -19,6 +19,7 @@ def list_individuals(
     surname: str | None = None,
     birth_from: str | None = None,
     birth_to: str | None = None,
+    sort: str = "name",
     page: int = 1,
     page_size: int = 50,
     conn: sqlite3.Connection = Depends(get_conn),
@@ -46,10 +47,14 @@ def list_individuals(
     page_size = max(1, min(page_size, 200))
     offset = (page - 1) * page_size
 
+    order_by = {
+        "name": "surname IS NULL, surname, given_names IS NULL, given_names",
+        "birth_asc": "birth_date_sort IS NULL, birth_date_sort",
+        "birth_desc": "birth_date_sort IS NULL, birth_date_sort DESC",
+    }.get(sort, "surname IS NULL, surname, given_names IS NULL, given_names")
+
     rows = conn.execute(
-        f"SELECT * FROM individuals {where} "
-        "ORDER BY surname IS NULL, surname, given_names IS NULL, given_names "
-        "LIMIT ? OFFSET ?",
+        f"SELECT * FROM individuals {where} ORDER BY {order_by} LIMIT ? OFFSET ?",
         [*params, page_size, offset],
     ).fetchall()
 

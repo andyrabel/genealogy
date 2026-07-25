@@ -5,15 +5,9 @@ import sqlite3
 from fastapi import APIRouter, Depends, HTTPException
 
 from genealogy.web.deps import get_conn
+from genealogy.web.serialize import year_of
 
 router = APIRouter(prefix="/api/tree", tags=["tree"])
-
-
-def _year(date_sort: str | None) -> str | None:
-    if not date_sort:
-        return None
-    year = date_sort[:4]
-    return year if year.isdigit() else None
 
 
 def _node(row: sqlite3.Row, *, is_spouse: bool = False) -> dict:
@@ -23,8 +17,8 @@ def _node(row: sqlite3.Row, *, is_spouse: bool = False) -> dict:
         "id": row["id"],
         "name": name,
         "sex": row["sex"],
-        "birth_year": _year(row["birth_date_sort"]),
-        "death_year": _year(row["death_date_sort"]),
+        "birth_year": year_of(row["birth_date_sort"]),
+        "death_year": year_of(row["death_date_sort"]),
         "is_living": bool(row["is_living"]),
         "is_spouse": is_spouse,
     }

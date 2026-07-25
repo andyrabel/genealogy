@@ -11,6 +11,14 @@ def display_name(row: sqlite3.Row) -> str:
     return name or "(unknown)"
 
 
+def year_of(date_sort: str | None) -> str | None:
+    """Extract the "YYYY" year from a "YYYY-MM-DD" sort key, or None."""
+    if not date_sort:
+        return None
+    year = date_sort[:4]
+    return year if year.isdigit() else None
+
+
 def individual_summary(row: sqlite3.Row) -> dict:
     return {
         "id": row["id"],
@@ -20,8 +28,10 @@ def individual_summary(row: sqlite3.Row) -> dict:
         "surname": row["surname"],
         "sex": row["sex"],
         "birth_date_raw": row["birth_date_raw"],
+        "birth_year": year_of(row["birth_date_sort"]),
         "birth_place": row["birth_place"],
         "death_date_raw": row["death_date_raw"],
+        "death_year": year_of(row["death_date_sort"]),
         "death_place": row["death_place"],
         "is_living": bool(row["is_living"]),
     }
