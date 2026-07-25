@@ -1,0 +1,35 @@
+# --- Personal genealogy data: NEVER commit ---
+data/*
+!data/.gitkeep
+*.ged
+*.GED
+*.gedcom
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
