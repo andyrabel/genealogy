@@ -39,6 +39,8 @@ export async function renderTree(app, rootId, opts = {}) {
   const view = ["outline", "direct"].includes(opts.view) ? opts.view : "chart";
   const targetId = opts.targetId || null;
 
+  document.title = "Genealogy";
+
   const container = document.createElement("div");
   container.innerHTML = `
     <div class="card">
@@ -138,6 +140,8 @@ async function renderOutline(body, rootId) {
   }
 
   const asOf = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long" });
+  const birthYear = data.root.birth_year ? ` ${data.root.birth_year}` : "";
+  document.title = `Outline Descendants of ${data.root.name}${birthYear} as of ${asOf}`;
 
   const report = document.createElement("div");
   report.className = "outline-report";
@@ -195,6 +199,7 @@ async function renderDirectLine(body, rootId, targetId) {
   const first = data.steps[0];
   const last = data.steps[data.steps.length - 1];
   const asOf = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long" });
+  document.title = `Direct Line Descendants of ${first.name} to ${last.name} as of ${asOf}`;
 
   const report = document.createElement("div");
   report.className = "outline-report";
