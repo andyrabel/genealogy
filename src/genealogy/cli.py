@@ -11,6 +11,8 @@ from genealogy.db.exporter import export_gedcom_file
 from genealogy.db.importer import import_gedcom_file
 
 DEFAULT_DB = "data/tree.db"
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8000
 
 
 def cmd_import(args: argparse.Namespace) -> int:
@@ -30,6 +32,21 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    from genealogy.web.app import create_app
+
+    db_path = Path(args.db)
+    if not db_path.exists():
+        print(f"Database not found: {db_path} (run `genealogy import` first)", file=sys.stderr)
+        return 1
+
+    app = create_app(db_path)
+    uvicorn.run(app, host=args.host, port=args.port)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="genealogy")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -43,6 +60,12 @@ def build_parser() -> argparse.ArgumentParser:
     export_parser.add_argument("gedcom_file", help="Path to write the .ged file to")
     export_parser.add_argument("--db", default=DEFAULT_DB, help=f"SQLite DB path (default: {DEFAULT_DB})")
     export_parser.set_defaults(func=cmd_export)
+
+    serve_parser = subparsers.add_parser("serve", help="Run the local web viewer/editor")
+    serve_parser.add_argument("--db", default=DEFAULT_DB, help=f"SQLite DB path (default: {DEFAULT_DB})")
+    serve_parser.add_argument("--host", default=DEFAULT_HOST, help=f"Host to bind (default: {DEFAULT_HOST})")
+    serve_parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"Port to bind (default: {DEFAULT_PORT})")
+    serve_parser.set_defaults(func=cmd_serve)
 
     return parser
 

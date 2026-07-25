@@ -44,7 +44,14 @@ src/genealogy/
     importer.py   GEDCOM file/document -> raw tree tables
     normalize.py  raw tree -> normalized tables
     exporter.py   raw tree tables -> GedcomDocument -> GEDCOM text
-  cli.py          `genealogy import` / `genealogy export`
+    tree_edit.py  low-level read/write primitives on the raw tree
+    edits.py      domain edits (individuals/families/events/sources), each
+                   committing a raw-tree mutation + normalized-table rebuild
+  web/
+    app.py        FastAPI app factory, mounts the API + static frontend
+    routes/       individuals/families/events/sources/tree JSON endpoints
+    static/       vanilla JS + D3 frontend (no build step)
+  cli.py          `genealogy import` / `genealogy export` / `genealogy serve`
 ```
 
 Round-trip fidelity is verified in `tests/test_roundtrip.py` (pure GEDCOM
@@ -55,11 +62,12 @@ synthetic fixture in `tests/fixtures/sample_gedcom.py`.
 
 - **Backend**: Python 3.12, stdlib `sqlite3` (no ORM — the schema is small
   and fidelity-critical enough that direct SQL is worth more than ORM
-  convenience), FastAPI + Uvicorn for the local web UI (Phase 1, not yet
-  scaffolded).
-- **Frontend**: vanilla JS + D3.js for the pedigree diagram, served as
-  static files by FastAPI — no Node build step needed, which keeps the dev
-  workflow simple under WSL.
+  convenience), FastAPI + Uvicorn for the local web UI. Edits always go
+  through the raw GEDCOM tree (`genealogy.db.edits`), never the normalized
+  tables directly, so round-trip export fidelity is preserved.
+- **Frontend**: vanilla JS + D3.js (vendored, no CDN) for the pedigree
+  diagram, served as static files by FastAPI — no Node build step needed,
+  which keeps the dev workflow simple under WSL.
 - **Research module** (Phase 2): `httpx` for the FamilySearch API; plain URL
   builders (no scraping) for FreeBMD/FreeCEN/FreeREG/National Archives
   Discovery, since those are search-form sites without open APIs.
@@ -76,7 +84,8 @@ source scripts/dev.sh   # creates .venv, installs the project + dev deps
 # Import your GEDCOM export from Family Tree for Windows
 genealogy import /path/to/your-export.ged --db data/tree.db
 
-# ... use the (forthcoming) web UI to research, edit, flag issues ...
+# Browse and edit the tree at http://127.0.0.1:8000
+genealogy serve --db data/tree.db
 
 # Export back to GEDCOM at any time
 genealogy export data/tree.db /path/to/output.ged
@@ -94,9 +103,9 @@ pytest
 - [x] GEDCOM 5.5.1 parser/writer with round-trip fidelity
 - [x] SQLite raw-tree + normalized schema
 - [x] Import/export CLI
-- [ ] FastAPI local web UI: pedigree/family tree diagram
-- [ ] Search individuals by name/date/place
-- [ ] Add/edit people, relationships, events, sources through the UI
+- [x] FastAPI local web UI: pedigree/family tree diagram
+- [x] Search individuals by name/date/place
+- [x] Add/edit people, relationships, events, sources through the UI
 - [ ] Data-quality flags (missing dates, orphaned records, duplicates)
 - [ ] Gap analysis view (most-promising-to-research-next ranking)
 
