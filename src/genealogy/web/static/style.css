@@ -238,6 +238,10 @@ th.sortable:hover { color: var(--text); }
 .outline-line a:hover { text-decoration: underline; }
 .outline-line.union-marker { color: var(--muted); font-style: italic; }
 
+@page {
+  margin: 0.5in;
+}
+
 @media print {
   .topbar, .no-print { display: none !important; }
   main#app { max-width: none; padding: 0; margin: 0; }
