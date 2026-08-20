@@ -172,10 +172,11 @@ def _rebuild_sources(conn: sqlite3.Connection) -> None:
         auth = tree.first(None, "AUTH")
         publ = tree.first(None, "PUBL")
         repo = tree.first(None, "REPO")
+        url = tree.first(None, "_URL")
         conn.execute(
             """
-            INSERT INTO sources (record_id, xref_id, title, author, publication_info, repository_note)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO sources (record_id, xref_id, title, author, publication_info, repository_note, url)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 record["id"], record["xref_id"],
@@ -183,6 +184,7 @@ def _rebuild_sources(conn: sqlite3.Connection) -> None:
                 auth["value"] if auth else None,
                 publ["value"] if publ else None,
                 repo["value"] if repo else None,
+                url["value"] if url else None,
             ),
         )
 

@@ -293,12 +293,14 @@ def create_source(
     author: str | None = None,
     publication_info: str | None = None,
     repository_note: str | None = None,
+    url: str | None = None,
 ) -> int:
     record_id = create_record(conn, "SOUR")
     set_child_value(conn, record_id, None, 1, "TITL", title)
     set_child_value(conn, record_id, None, 1, "AUTH", author)
     set_child_value(conn, record_id, None, 1, "PUBL", publication_info)
     set_child_value(conn, record_id, None, 1, "REPO", repository_note)
+    set_child_value(conn, record_id, None, 1, "_URL", url)
     _finish(conn)
     row = conn.execute("SELECT id FROM sources WHERE record_id = ?", (record_id,)).fetchone()
     return row["id"]
@@ -319,12 +321,14 @@ def update_source(
     author: str | None = None,
     publication_info: str | None = None,
     repository_note: str | None = None,
+    url: str | None = None,
 ) -> None:
     source = _source_row(conn, source_id)
     set_child_value(conn, source["record_id"], None, 1, "TITL", title)
     set_child_value(conn, source["record_id"], None, 1, "AUTH", author)
     set_child_value(conn, source["record_id"], None, 1, "PUBL", publication_info)
     set_child_value(conn, source["record_id"], None, 1, "REPO", repository_note)
+    set_child_value(conn, source["record_id"], None, 1, "_URL", url)
     _finish(conn)
 
 

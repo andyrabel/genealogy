@@ -59,6 +59,7 @@ class SourceIn(BaseModel):
     author: str | None = None
     publication_info: str | None = None
     repository_note: str | None = None
+    url: str | None = None
 
 
 class CitationIn(BaseModel):

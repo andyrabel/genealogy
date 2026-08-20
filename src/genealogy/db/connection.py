@@ -21,4 +21,14 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
 def init_db(conn: sqlite3.Connection) -> None:
     schema_sql = resources.files("genealogy.db").joinpath("schema.sql").read_text()
     conn.executescript(schema_sql)
+    _migrate(conn)
     conn.commit()
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Additive, idempotent column upgrades for databases created before
+    schema.sql gained them (CREATE TABLE IF NOT EXISTS doesn't alter
+    existing tables)."""
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(sources)")}
+    if "url" not in columns:
+        conn.execute("ALTER TABLE sources ADD COLUMN url TEXT")

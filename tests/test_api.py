@@ -32,8 +32,8 @@ def test_list_individuals(client):
     resp = client.get("/api/individuals")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["total"] == 5
-    assert len(body["results"]) == 5
+    assert body["total"] == 6
+    assert len(body["results"]) == 6
 
 
 def test_search_individuals_by_name(client):
@@ -205,9 +205,10 @@ def test_events_crud(client):
 
 
 def test_sources_and_citations_crud(client):
-    resp = client.post("/api/sources", json={"title": "Census 1881"})
+    resp = client.post("/api/sources", json={"title": "Census 1881", "url": "https://example.org/census-1881"})
     assert resp.status_code == 201
     source = resp.json()
+    assert source["url"] == "https://example.org/census-1881"
 
     john_id = _individual_id(client, "@I1@")
     resp = client.post(
@@ -219,6 +220,7 @@ def test_sources_and_citations_crud(client):
     resp = client.get(f"/api/sources/{source['id']}")
     assert resp.status_code == 200
     assert len(resp.json()["citations"]) == 1
+    assert resp.json()["url"] == "https://example.org/census-1881"
 
     resp = client.delete(f"/api/citations/{citation_id}")
     assert resp.status_code == 204

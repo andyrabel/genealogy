@@ -112,7 +112,8 @@ CREATE TABLE IF NOT EXISTS sources (
     title           TEXT,
     author          TEXT,
     publication_info TEXT,
-    repository_note TEXT
+    repository_note TEXT,
+    url             TEXT               -- stored as a non-standard _URL tag on the SOUR record
 );
 
 CREATE TABLE IF NOT EXISTS citations (

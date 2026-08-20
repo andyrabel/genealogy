@@ -6,6 +6,7 @@ const SOURCE_FIELDS = [
   { name: "author", label: "Author" },
   { name: "publication_info", label: "Publication info" },
   { name: "repository_note", label: "Repository" },
+  { name: "url", label: "URL" },
 ];
 
 export async function renderSources(app) {
@@ -29,7 +30,7 @@ export async function renderSources(app) {
           <button id="add-source-btn" class="primary">+ Add source</button>
         </div>
         <table>
-          <thead><tr><th>Title</th><th>Author</th><th>Publication</th><th></th></tr></thead>
+          <thead><tr><th>Title</th><th>Author</th><th>Publication</th><th>Link</th><th></th></tr></thead>
           <tbody>
             ${sources
               .map(
@@ -38,13 +39,14 @@ export async function renderSources(app) {
                 <td>${esc(s.title) || `<span class="muted">Source #${s.id}</span>`}</td>
                 <td>${esc(s.author)}</td>
                 <td>${esc(s.publication_info)}</td>
+                <td>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">open</a>` : ""}</td>
                 <td class="actions">
                   <button class="link edit-source" data-id="${s.id}">edit</button>
                   <button class="link delete-source" data-id="${s.id}">delete</button>
                 </td>
               </tr>`
               )
-              .join("") || `<tr><td colspan="4" class="muted">No sources yet.</td></tr>`}
+              .join("") || `<tr><td colspan="5" class="muted">No sources yet.</td></tr>`}
           </tbody>
         </table>
       </div>

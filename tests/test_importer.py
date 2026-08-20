@@ -30,7 +30,7 @@ def imported_conn(conn):
 
 def test_individuals_normalized(imported_conn):
     rows = {r["xref_id"]: r for r in imported_conn.execute("SELECT * FROM individuals")}
-    assert len(rows) == 5
+    assert len(rows) == 6
 
     john = rows["@I1@"]
     assert john["given_names"] == "John"
@@ -78,6 +78,7 @@ def test_events_include_birth_death_and_marriage(imported_conn):
 def test_sources_and_citations(imported_conn):
     source = imported_conn.execute("SELECT * FROM sources").fetchone()
     assert source["title"] == "Parish Registers of Leeds, Yorkshire"
+    assert source["url"] == "https://example.org/archives/leeds-parish-registers"
 
     citation = imported_conn.execute("SELECT * FROM citations").fetchone()
     assert citation["source_id"] == source["id"]

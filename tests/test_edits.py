@@ -222,6 +222,22 @@ def test_create_and_update_source(conn):
     assert row["title"] == "Census 1881 (corrected)"
 
 
+def test_create_and_update_source_url_round_trips(conn):
+    source_id = edits.create_source(conn, title="FreeBMD find", url="https://www.freebmd.org.uk/cgi/search.pl")
+    row = conn.execute("SELECT * FROM sources WHERE id = ?", (source_id,)).fetchone()
+    assert row["url"] == "https://www.freebmd.org.uk/cgi/search.pl"
+
+    edits.update_source(conn, source_id, title="FreeBMD find", url="https://www.freebmd.org.uk/cgi/search.pl?q=2")
+    row = conn.execute("SELECT * FROM sources WHERE id = ?", (source_id,)).fetchone()
+    assert row["url"] == "https://www.freebmd.org.uk/cgi/search.pl?q=2"
+
+    document = _reexport_and_reparse(conn)
+    source_record = document.by_xref(
+        conn.execute("SELECT xref_id FROM sources WHERE id = ?", (source_id,)).fetchone()["xref_id"]
+    )
+    assert source_record.sub("_URL").value == "https://www.freebmd.org.uk/cgi/search.pl?q=2"
+
+
 def test_add_citation_to_event_and_individual(conn):
     john_id = _individual_id(conn, "@I1@")
     source_id = edits.create_source(conn, title="Census 1881")

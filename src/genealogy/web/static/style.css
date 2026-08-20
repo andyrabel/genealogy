@@ -108,6 +108,14 @@ th.sortable:hover { color: var(--text); }
 .pill.M { background: #dde7f0; color: var(--male); }
 .pill.F { background: #f3dde8; color: var(--female); }
 .pill.living { background: #e3f0dd; color: #4c7a3a; }
+a.pill { text-decoration: none; cursor: pointer; }
+a.pill:hover { filter: brightness(0.95); }
+
+.focus-flash { animation: focus-flash 2s ease-out; }
+@keyframes focus-flash {
+  0% { box-shadow: 0 0 0 2px var(--male, #4c7a3a); }
+  100% { box-shadow: 0 0 0 2px transparent; }
+}
 
 .list-item {
   display: flex;

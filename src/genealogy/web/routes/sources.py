@@ -51,6 +51,7 @@ def _source_detail(conn: sqlite3.Connection, source: sqlite3.Row) -> dict:
         "author": source["author"],
         "publication_info": source["publication_info"],
         "repository_note": source["repository_note"],
+        "url": source["url"],
         "citations": citations,
     }
 

@@ -59,4 +59,7 @@ export const api = {
   getDescendantsOutline: (id) => request("GET", `/reports/descendants/${id}`),
   getDirectLine: (fromId, toId) =>
     request("GET", `/reports/direct-line?from_id=${fromId}&to_id=${toId}`),
+
+  getPatriline: (id) => request("GET", `/individuals/${id}/patriline`),
+  getResearchLinks: (id) => request("GET", `/individuals/${id}/research-links`),
 };

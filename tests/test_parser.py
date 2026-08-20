@@ -5,7 +5,9 @@ from tests.fixtures.sample_gedcom import SAMPLE_GEDCOM
 def test_parses_all_top_level_records():
     doc = parse_gedcom(SAMPLE_GEDCOM)
     types = [r.record_type for r in doc.records]
-    assert types == ["HEAD", "INDI", "INDI", "INDI", "INDI", "INDI", "FAM", "SOUR", "NOTE", "TRLR"]
+    assert types == [
+        "HEAD", "INDI", "INDI", "INDI", "INDI", "INDI", "INDI", "FAM", "FAM", "SOUR", "NOTE", "TRLR",
+    ]
 
 
 def test_parses_name_and_structured_subfields():

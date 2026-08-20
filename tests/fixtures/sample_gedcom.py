@@ -27,6 +27,7 @@ SAMPLE_GEDCOM = """0 HEAD
 1 SOUR @S1@
 2 PAGE p. 42
 2 QUAY 2
+1 FAMC @F2@
 0 @I2@ INDI
 1 NAME Mary /Jones/
 2 GIVN Mary
@@ -54,6 +55,12 @@ SAMPLE_GEDCOM = """0 HEAD
 2 SURN Dupônt
 1 SEX M
 1 NOTE Encoding smoke test: É é è ü ö å.
+0 @I6@ INDI
+1 NAME Unknown /Smith/
+2 GIVN Unknown
+2 SURN Smith
+1 SEX M
+1 FAMS @F2@
 0 @F1@ FAM
 1 HUSB @I1@
 1 WIFE @I2@
@@ -61,10 +68,14 @@ SAMPLE_GEDCOM = """0 HEAD
 1 MARR
 2 DATE 3 SEP 1876
 2 PLAC Leeds, Yorkshire, England
+0 @F2@ FAM
+1 HUSB @I6@
+1 CHIL @I1@
 0 @S1@ SOUR
 1 TITL Parish Registers of Leeds, Yorkshire
 1 AUTH West Yorkshire Archive Service
 1 PUBL Leeds Parish Records, 1850-1900
+1 _URL https://example.org/archives/leeds-parish-registers
 0 @N1@ NOTE This is a shared note record.
 1 CONT It has a second line via CONT.
 0 TRLR

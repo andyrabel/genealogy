@@ -1,5 +1,6 @@
 import { api } from "../api.js";
 import { esc, openFormModal, confirmModal, pickPerson, showError, SEX_OPTIONS } from "../ui.js";
+import { renderResearchPanel } from "./research.js";
 
 const EVENT_TYPES = [
   "BIRT", "CHR", "DEAT", "BURI", "CREM", "BAPM", "CONF", "OCCU", "RESI",
@@ -25,9 +26,22 @@ export async function renderPerson(app, id) {
     wireParents(person, refresh, container);
     wireFamilies(person, refresh, container);
     wireCitations(person, refresh, container);
+    await renderResearchPanel(container, person, refresh);
+    focusFromQuery(container);
   }
 
   await refresh();
+}
+
+function focusFromQuery(container) {
+  const [, queryString] = location.hash.slice(1).split("?");
+  const focus = new URLSearchParams(queryString || "").get("focus");
+  if (focus !== "citations") return;
+  const card = container.querySelector("#citations-card");
+  if (!card) return;
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+  card.classList.add("focus-flash");
+  setTimeout(() => card.classList.remove("focus-flash"), 2000);
 }
 
 function personLabel(p) {
@@ -151,7 +165,7 @@ function renderShell(person) {
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="citations-card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <h3>Sources</h3>
         <button id="add-citation-btn">+ Add citation</button>
