@@ -12,8 +12,14 @@ from __future__ import annotations
 import sqlite3
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import date
 
 from genealogy.gedcom.dates import parse_gedcom_date
+
+# Nobody on record has lived this long; a birth this far back with no death
+# fact is presumed to predate the person's death being recorded, not proof
+# they're still alive.
+PRESUMED_DECEASED_AGE_YEARS = 110
 
 INDI_EVENT_TAGS = {
     "BIRT", "CHR", "DEAT", "BURI", "CREM", "ADOP", "BAPM", "BARM", "BASM",
@@ -116,6 +122,15 @@ def _parse_name(tree: _Tree, name_node: sqlite3.Row | None) -> tuple[str | None,
     return raw.strip() or None, None, None, None
 
 
+def _is_presumed_deceased(birth_sort: str | None) -> bool:
+    """True if a birth date, though undated by DEAT, is old enough that the
+    person can't plausibly still be alive."""
+    if not birth_sort:
+        return False
+    birth_year = int(birth_sort[:4])
+    return date.today().year - birth_year >= PRESUMED_DECEASED_AGE_YEARS
+
+
 def _rebuild_individuals(conn: sqlite3.Connection) -> dict[str, int]:
     xref_to_id: dict[str, int] = {}
     records = conn.execute(
@@ -141,7 +156,7 @@ def _rebuild_individuals(conn: sqlite3.Connection) -> dict[str, int]:
         if death_row:
             death_raw, death_sort, death_place = _extract_date_place(tree, death_row["id"])
 
-        is_living = death_row is None
+        is_living = death_row is None and not _is_presumed_deceased(birth_sort)
 
         cursor = conn.execute(
             """

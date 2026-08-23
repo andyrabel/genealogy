@@ -40,9 +40,17 @@ def test_individuals_normalized(imported_conn):
     assert john["death_date_sort"] == "1920-00-00"
     assert john["is_living"] == 0
 
+    # Born 1855, no DEAT recorded -- old enough to be presumed deceased
+    # rather than shown as living.
     mary = rows["@I2@"]
-    assert mary["is_living"] == 1
+    assert mary["is_living"] == 0
     assert mary["birth_date_sort"] == "1855-00-00"
+
+    # No birth date and no DEAT -- can't apply the age heuristic, so still
+    # presumed living.
+    unknown_ancestor = rows["@I4@"]
+    assert unknown_ancestor["birth_date_sort"] is None
+    assert unknown_ancestor["is_living"] == 1
 
 
 def test_families_and_children(imported_conn):
