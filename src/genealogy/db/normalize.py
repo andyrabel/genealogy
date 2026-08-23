@@ -21,18 +21,24 @@ from genealogy.gedcom.dates import parse_gedcom_date
 # they're still alive.
 PRESUMED_DECEASED_AGE_YEARS = 110
 
-INDI_EVENT_TAGS = {
+# Tuples, not sets: iteration order here determines events.id assignment on
+# every rebuild (a full DELETE+re-INSERT), and Python's per-process string
+# hash randomization makes set iteration order vary from run to run -- a set
+# here previously caused the same BIRT/DEAT pair to swap which id it got
+# between separate process invocations, silently misdirecting edits/citations
+# made against a previously-fetched event id.
+INDI_EVENT_TAGS = (
     "BIRT", "CHR", "DEAT", "BURI", "CREM", "ADOP", "BAPM", "BARM", "BASM",
     "BLES", "CHRA", "CONF", "FCOM", "ORDN", "NATU", "EMIG", "IMMI", "CENS",
     "PROB", "WILL", "GRAD", "RETI", "EVEN",
     "CAST", "DSCR", "EDUC", "IDNO", "NATI", "NCHI", "NMR", "OCCU", "PROP",
     "RELI", "RESI", "SSN", "TITL", "FACT",
-}
+)
 
-FAM_EVENT_TAGS = {
+FAM_EVENT_TAGS = (
     "ANUL", "CENS", "DIV", "DIVF", "ENGA", "MARB", "MARC", "MARR", "MARL",
     "MARS", "RESI", "EVEN",
-}
+)
 
 
 @dataclass
